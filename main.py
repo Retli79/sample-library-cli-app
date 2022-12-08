@@ -6,7 +6,7 @@ from connect import connect
 import psycopg2
 from config import config
 import datetime
-from database import add, delete, signup, update, get_books
+from database import *
 
 
 console = Console()
@@ -21,57 +21,80 @@ def start():
 
 
 @app.command("sign_up")
-def sign_up(username: str):
-    typer.echo(f"Nice that you are signing up!")
+def sign_up():
+    username = input('Enter your username: ')
+    typer.echo(f"Nice that {username} are signing up!")
     signup(username)
+    show_users(users())
+
+@app.command("delete_user")
+def delete_user():
+    username = input('Enter your username: ')
+    typer.echo(f"{username} is removed!")
+    remove_user(username)
+    show_users(users())
 
 
 @app.command("add_book")
-def add_book():
-    typer.echo(f"Book is added!")
-    add()
+def add_book():    
+    bookname = input('Enter a book name: ')
+    authorname = input('Enter a author name: ')
+    pagesbook = input('Enter pages: ')
+    genrebook = input('Enter a genre: ')
+    availabilities =  input('Enter true: ')      
+    add(bookname, authorname, pagesbook, genrebook, availabilities)
+    typer.echo(f"{bookname} is added!")
+    show_books(books())
 
+    
 
 @app.command("delete_book")
 def delete_book():
+    bookid = input('Enter a book ID: ')
+    delete(bookid)
     typer.echo(f"Book is deleted!")
-    delete()
+    show_books(books())
 
 
 @app.command("update_book")
 def update_book():
-    typer.echo(f"Book is updated!")
-    update() 
-   
-   
-# Example function for tables, you can add more columns/row.
+    bookid = input('Enter a book ID: ')
+    bookname = input('Enter a book name: ')
+    authorname = input('Enter a author name: ')
+    pagesbook = input('Enter pages: ')
+    genrebook = input('Enter a genre: ')
+    update(bookid,bookname,authorname, pagesbook,genrebook  ) 
+    typer.echo(f" {bookname} is updated!")
+    show_books(books())
+     
+
 
 @app.command("get_book")
 def get_book():
-    typer.echo(f"Books are displayed!")
-    books = get_books()
-    print(books)
-    display_table(books)
-
-
-def display_table(books):
-
-
-    table = Table(show_header=True, header_style="bold blue")
+    username = input('Enter your username: ')
+    typer.echo(f"{username}`books are displayed!")
+    display_table(get_books(username))
    
-    table.add_column("Book ID", style="dim", min_width=10, justify=True)
-    table.add_column("Book Name", style="dim", min_width=10, justify=True)
-    table.add_column("Author", style="dim", min_width=10, justify=True)
-    table.add_column("Pages", style="dim", min_width=10, justify=True)
-    table.add_column("Genre", style="dim", min_width=10, justify=True)
-    table.add_column("Availability", style="dim", min_width=10, justify=True)
-    
-    for book in books:
-        table.add_row(str(book[0]),book[1], book[2], str(book[3]), book[4], str(book[5]), book[6])
-    
-    
 
-    console.print(table)
+
+@app.command("fav_book")
+def fav_book():
+    username = input('Enter your username: ')
+    typer.echo(f"Favorite books are displayed!")
+    display_table(fav_books(username))
+
+
+
+@app.command("statistics")
+def statistics():
+    username = input('Enter your username: ')
+    typer.echo(f"Statistics are displayed!")
+    display_statistics(get_statistics(username))
+
+
+
+    
+    
 
 if __name__ == "__main__":
     app()
