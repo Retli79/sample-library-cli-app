@@ -9,6 +9,7 @@ import datetime
 
 console = Console()
 app = typer.Typer()
+params = config()
 
 
 
@@ -209,8 +210,411 @@ def display_statistics(counts):
 
 
 
-   
-        
+   #####################################################################################
+   ###Ghassan`s part
+
+
+def search_name(name: str):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" SELECT * FROM public.book where book_name = '{name}'
+         """
+    cur.execute(sql)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+def search_author(author: str):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" SELECT * FROM public.book where author_name = '{author}'
+         """
+    cur.execute(sql)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+def recent_added(author):
+    list=[]
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" SELECT author_name FROM public.book 
+                 """
+    cur.execute(sql)
+    authors = cur.fetchall()
+    r= len((authors))
+    for i in range(r):
+         list.append(authors[i][0])
+
+
+    if bool(author) is True:
+        if author in list:
+            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            cur = conn.cursor()
+            sql = f""" SELECT * FROM public.book where author_name = '{author}'order by book_date_added desc limit 5
+                 """
+            cur.execute(sql)
+            books = cur.fetchall()
+            conn.commit()
+            return books
+        else:
+            print("author does not exist!")
+
+
+    elif bool(author) is False:
+        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        cur = conn.cursor()
+        sql = f""" SELECT * FROM public.book order by book_date_added desc limit 5
+                     """
+        cur.execute(sql)
+        books = cur.fetchall()
+        conn.commit()
+        return books
+
+def mostread_books(genre):
+    list=[]
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" SELECT genre FROM public.book 
+                 """
+    cur.execute(sql)
+    genres = cur.fetchall()
+    r= len((genres))
+    for i in range(r):
+         list.append(genres[i][0])
+
+
+    if bool(genre) is True:
+        if genre in list:
+            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            cur = conn.cursor()
+            sql = f"""select b.book_id, b.book_name, b.author_name,b.genre, c.count
+from public.book as b
+join (SELECT book_id, count(mark_read) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id 
+where genre = '{genre}' order by c.count desc limit 10
+                 """
+            cur.execute(sql)
+            books = cur.fetchall()
+            conn.commit()
+            return books
+        else:
+            print("genre does not exist!")
+
+
+    elif bool(genre) is False:
+        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        cur = conn.cursor()
+        sql = f""" select b.book_id, b.book_name, b.author_name,b.genre, c.count
+from public.book as b
+join (SELECT book_id, count(mark_read) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id 
+order by c.count desc limit 10
+                     """
+        cur.execute(sql)
+        books = cur.fetchall()
+        conn.commit()
+        return books
+
+def most_favorite(genre):
+    list=[]
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" SELECT genre FROM public.book 
+                 """
+    cur.execute(sql)
+    genres = cur.fetchall()
+    r= len((genres))
+    for i in range(r):
+         list.append(genres[i][0])
+
+
+    if bool(genre) is True:
+        if genre in list:
+            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            cur = conn.cursor()
+            sql = f"""select b.book_id, b.book_name, b.author_name,b.genre, c.count
+from public.book as b
+join (SELECT book_id, count(fav_book) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id 
+where genre = '{genre}' order by c.count desc limit 10
+                 """
+            cur.execute(sql)
+            books = cur.fetchall()
+            conn.commit()
+            return books
+        else:
+            print("genre does not exist!")
+
+
+    elif bool(genre) is False:
+        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        cur = conn.cursor()
+        sql = f""" select b.book_id, b.book_name, b.author_name,b.genre, c.count
+from public.book as b
+join (SELECT book_id, count(fav_book) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id 
+order by c.count desc limit 10
+                     """
+        cur.execute(sql)
+        books = cur.fetchall()
+        conn.commit()
+        return books
+
+def mostread_genres():
+
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f"""select b.genre, sum(c.count)
+from public.book as b
+join (SELECT book_id, count(mark_read) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id
+GROUP BY genre order by sum desc limit 5
+                 """
+    cur.execute(sql)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+def mostread_authors():
+
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f"""select b.author_name, sum(c.count)
+from public.book as b
+join (SELECT book_id, count(mark_read) FROM command GROUP BY book_id) as c
+on b.book_id = c.book_id
+GROUP BY author_name order by sum desc limit 5
+                 """
+    cur.execute(sql)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+def mark_read(book_id,username):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f"INSERT INTO  public.command (mark_read) VALUES ('True') where "
+    cur.execute(sql)
+    conn.commit()
+
+
+
+
+ #####################################################################################
+   ###Rumeysa`s part
+def markread(book_id: int, user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" 
+        INSERT INTO public.command (book_id, user_id, mark_read) VALUES ({book_id}, {user_id}, 'True'); 
+        """
+
+    cur.execute(sql)
+    conn.commit()
+
+def markreading(book_id: int, user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" 
+        INSERT INTO public.command (book_id, user_id, mark_reading) VALUES ({book_id}, {user_id}, 'True');
+        """
+
+    cur.execute(sql)
+    conn.commit()
+
+def mark_willread(book_id: int, user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" 
+        INSERT INTO public.command (book_id, user_id, mark_will_read) VALUES ({book_id}, {user_id}, 'True');
+        """
+    cur.execute(sql)
+    conn.commit()
+
+def fav_books(book_id: int, user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql = f""" 
+        INSERT INTO public.command (book_id, user_id, fav_book) VALUES ({book_id}, {user_id}, 'True');
+        """
+    try:    
+        cur.execute(sql)
+        conn.commit()
+    except:
+        sql = f""" 
+        UPDATE public.command SET fav_book = 'True' 
+        WHERE book_id = {book_id} and user_id = {user_id}
+        """
+        cur.execute(sql)
+        conn.commit()
+
+def my_book_read(user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql1 = f"""
+        SELECT 
+                command.book_id,
+                book_name,
+                author_name,
+                pages,
+                genre,
+                availability
+        FROM command 
+        INNER JOIN book ON command.book_id = book.book_id
+        WHERE mark_read = 'True' and user_id= ('{user_id}')
+        """
+    cur.execute(sql1)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+def my_book_reading(user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql1 = f"""
+        SELECT 
+                command.book_id,
+                book_name,
+                author_name,
+                pages,
+                genre,
+                availability
+        FROM command 
+        INNER JOIN book ON command.book_id = book.book_id
+        WHERE mark_reading = 'True' and user_id= ('{user_id}')
+        """
+    cur.execute(sql1)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+def my_book_will_read(user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql1 = f"""
+        SELECT 
+                command.book_id,
+                book_name,
+                author_name,
+                pages,
+                genre,
+                availability
+        FROM command 
+        INNER JOIN book ON command.book_id = book.book_id
+        WHERE mark_will_read = 'True' and user_id= ('{user_id}')
+        """
+    cur.execute(sql1)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+def my_fav_book(user_id: int):
+    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    cur = conn.cursor()
+    sql1 = f"""
+        SELECT 
+                command.book_id,
+                book_name,
+                author_name,
+                pages,
+                genre,
+                availability
+        FROM command 
+        INNER JOIN book ON command.book_id = book.book_id
+        WHERE fav_book = 'True' and user_id= ('{user_id}')
+        """
+    cur.execute(sql1)
+    books = cur.fetchall()
+    conn.commit()
+    return books
+
+
+
+
+def my_books(user_id: int):
+    typer.echo("BOOKS YOU READ!")
+    books = my_book_read(user_id)
+    table = Table(show_header=True, header_style="bold blue")
+
+    table.add_column("Book ID", style="dim", min_width=10, justify=True)
+    table.add_column("Book Name", style="dim", min_width=10, justify=True)
+    table.add_column("Author", style="dim", min_width=10, justify=True)
+    table.add_column("Pages", style="dim", min_width=10, justify=True)
+    table.add_column("Genre", style="dim", min_width=10, justify=True)
+    table.add_column("Availability", style="dim", min_width=10, justify=True)
+    if bool(books) is True:
+        for book in books:
+            table.add_row(str(book[0]),str(book[1]), str(book[2]), str(book[3]), str(book[4]), str(book[5]))
+        console.print(table)
+    else:
+        console.print(table)
+
+    typer.echo("BOOKS YOU ARE READING!")
+    books = my_book_reading(user_id)
+    table = Table(show_header=True, header_style="bold blue")
+
+    table.add_column("Book ID", style="dim", min_width=10, justify=True)
+    table.add_column("Book Name", style="dim", min_width=10, justify=True)
+    table.add_column("Author", style="dim", min_width=10, justify=True)
+    table.add_column("Pages", style="dim", min_width=10, justify=True)
+    table.add_column("Genre", style="dim", min_width=10, justify=True)
+    table.add_column("Availability", style="dim", min_width=10, justify=True)
+    if bool(books) is True:
+        for book in books:
+            table.add_row(str(book[0]),str(book[1]), str(book[2]), str(book[3]), str(book[4]), str(book[5]))
+        console.print(table)
+    else:
+        console.print(table)
+
+    typer.echo("BOOKS YOU WILL READ!")
+    books = my_book_will_read(user_id)
+    table = Table(show_header=True, header_style="bold blue")
+
+    table.add_column("Book ID", style="dim", min_width=10, justify=True)
+    table.add_column("Book Name", style="dim", min_width=10, justify=True)
+    table.add_column("Author", style="dim", min_width=10, justify=True)
+    table.add_column("Pages", style="dim", min_width=10, justify=True)
+    table.add_column("Genre", style="dim", min_width=10, justify=True)
+    table.add_column("Availability", style="dim", min_width=10, justify=True)
+    if bool(books) is True:
+        for book in books:
+            table.add_row(str(book[0]),str(book[1]), str(book[2]), str(book[3]), str(book[4]), str(book[5]))
+        console.print(table)
+    else:
+        console.print(table)
+
+    typer.echo("YOUR FAVORITE BOOKS!")
+    books = my_fav_book(user_id)
+    table = Table(show_header=True, header_style="bold blue")
+
+    table.add_column("Book ID", style="dim", min_width=10, justify=True)
+    table.add_column("Book Name", style="dim", min_width=10, justify=True)
+    table.add_column("Author", style="dim", min_width=10, justify=True)
+    table.add_column("Pages", style="dim", min_width=10, justify=True)
+    table.add_column("Genre", style="dim", min_width=10, justify=True)
+    table.add_column("Availability", style="dim", min_width=10, justify=True)
+    if bool(books) is True:
+        for book in books:
+            table.add_row(str(book[0]),str(book[1]), str(book[2]), str(book[3]), str(book[4]), str(book[5]))
+        console.print(table)
+    else:
+        console.print(table)
+
+
+def display_tables(books):
+    table = Table(show_header=True, header_style="bold blue")
+
+    table.add_column("Book ID", style="dim", min_width=10, justify=True)
+    table.add_column("Book Name", style="dim", min_width=10, justify=True)
+    table.add_column("Author", style="dim", min_width=10, justify=True)
+    table.add_column("Pages", style="dim", min_width=10, justify=True)
+    table.add_column("Genre", style="dim", min_width=10, justify=True)
+    table.add_column("Availability", style="dim", min_width=10, justify=True)
+    if bool(books) is True:
+        for book in books:
+            table.add_row(str(book[0]),str(book[1]), str(book[2]), str(book[3]), str(book[4]), str(book[5]))
+        console.print(table)
+    else:
+        console.print(table)
 
     
 
