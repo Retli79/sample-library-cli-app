@@ -5,7 +5,6 @@ from typing import Optional
 from connect import connect
 from database import *
 
-#Establish a typer
 console = Console()
 app = typer.Typer()
 
