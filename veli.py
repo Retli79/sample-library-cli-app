@@ -1,0 +1,1 @@
+#Velinin dosyasi olustu
