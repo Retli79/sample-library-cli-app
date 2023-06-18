@@ -3,21 +3,21 @@ from rich.console import Console
 from rich.table import Table
 from typing import Optional
 from connect import connect
-import psycopg2
-from config import config
-import datetime
 from database import *
 
 
 console = Console()
 app = typer.Typer()
 
+# Establish a connection
+conn = connect()
+
 
 @app.command("start")
 def start():
     typer.secho(f'''Welcome to Library CLI!\n\n
         You can execute command '--help' to see the possible commands''', fg=typer.colors.GREEN)
-    connect()
+   
 
 
 @app.command("sign_up")
@@ -25,7 +25,14 @@ def sign_up():
     username = input('Enter your username: ')
     typer.echo(f"Nice that {username} are signing up!")
     signup(username)
-    show_users(users())
+    
+
+@app.command("display_users")
+def display_users():
+     typer.echo(f"All users")
+     show_users(users())
+     
+    
 
 @app.command("delete_user")
 def delete_user():
@@ -92,9 +99,6 @@ def statistics():
     display_statistics(get_statistics(username))
 
 
-
-##############################################################################
-###Ghassan` part
 
 
 @app.command("search_by_name")
@@ -195,9 +199,6 @@ def display_table(books):
 
 
 
-###############################################################################################
-#####Rumeysa`s Part
-
 @app.command("mark_read")
 def mark_read(book_id: int, user_id: int):
     typer.echo(f'You marked book {book_id} as read!')
@@ -243,14 +244,9 @@ def show_my_books(user_id: int):
     
     
 
-
-    
-
-
-
-    
-
 if __name__ == "__main__":
     app()
+
+
     
 

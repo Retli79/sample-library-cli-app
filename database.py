@@ -3,34 +3,36 @@ from rich.console import Console
 from rich.table import Table
 from typing import Optional
 from connect import connect
-import psycopg2
-from config import config
-import datetime
+from database import *
+
+
 
 console = Console()
 app = typer.Typer()
-params = config()
+
 
 
 
 
 def signup(username: str):    
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""INSERT INTO  public.users (user_name) VALUES ('{username}')"""
     cur.execute(sql)
     conn.commit()
-    
+   
+
+ 
 
 def users():
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""SELECT * FROM  users """
-
     cur.execute(sql)
     users = cur.fetchall()
     conn.commit()
     return users
+
 
 def show_users(users):
     table = Table(show_header=True, header_style="bold blue", show_lines=True)
@@ -44,7 +46,7 @@ def show_users(users):
 
 
 def remove_user(username: str):    
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" DELETE FROM public.users where user_name = ('{username}')  """
     cur.execute(sql)
@@ -53,7 +55,7 @@ def remove_user(username: str):
 
 
 def add(book_name: str, author_name:str, pages:int, genre:str, availability:bool ):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""INSERT INTO  public.book (book_name, author_name, pages, genre, availability) 
             VALUES ('{book_name}', '{author_name}', {pages}, '{genre}', '{availability}');
@@ -63,7 +65,7 @@ def add(book_name: str, author_name:str, pages:int, genre:str, availability:bool
     conn.commit()
 
 def books():
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""SELECT * FROM  book """
 
@@ -95,13 +97,10 @@ def show_books(books):
 
     console.print(table)
     
-    
-
-    
 
 
 def delete(book_id):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" DELETE FROM public.book where book_id = ('{book_id}')"""
     cur.execute(sql)
@@ -109,7 +108,7 @@ def delete(book_id):
 
 
 def update(book_id:int, book_name: str, author_name:str, pages:int, genre:str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" UPDATE book SET book_name = ('{book_name}') , author_name = ('{author_name}')
                , pages = ('{pages}') , genre = ('{genre}')
@@ -120,7 +119,7 @@ def update(book_id:int, book_name: str, author_name:str, pages:int, genre:str):
 
 
 def get_books(user_name = str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
                SElECT user_name, * FROM book 
@@ -136,7 +135,7 @@ def get_books(user_name = str):
 
 
 def fav_books(user_name = str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
                SElECT users.user_name , * FROM book JOIN command ON book.book_id = command.book_id 
@@ -151,10 +150,7 @@ def fav_books(user_name = str):
 
 
 
-
-
 def display_table(books):
-
 
     table = Table(show_header=True, header_style="bold blue", show_lines=True)
    
@@ -180,7 +176,7 @@ def display_table(books):
 
 
 def get_statistics(user_name = str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
                SELECT  count(C.mark_read), count(distinct(B.author_name)), count(distinct(B.genre)), sum(B.pages) from command AS  C 
@@ -215,19 +211,17 @@ def display_statistics(counts):
 
 
 def search_name(name: str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
-    sql = f""" SELECT * FROM public.book where book_name = '{name}'
-         """
+    sql = f""" SELECT * FROM public.book where book_name = '{name}' """
     cur.execute(sql)
     books = cur.fetchall()
     conn.commit()
     return books
 def search_author(author: str):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
-    sql = f""" SELECT * FROM public.book where author_name = '{author}'
-         """
+    sql = f""" SELECT * FROM public.book where author_name = '{author}'  """
     cur.execute(sql)
     books = cur.fetchall()
     conn.commit()
@@ -235,10 +229,9 @@ def search_author(author: str):
 
 def recent_added(author):
     list=[]
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
-    sql = f""" SELECT author_name FROM public.book 
-                 """
+    sql = f""" SELECT author_name FROM public.book   """
     cur.execute(sql)
     authors = cur.fetchall()
     r= len((authors))
@@ -248,7 +241,7 @@ def recent_added(author):
 
     if bool(author) is True:
         if author in list:
-            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            conn = connect()
             cur = conn.cursor()
             sql = f""" SELECT * FROM public.book where author_name = '{author}'order by book_date_added desc limit 5
                  """
@@ -261,7 +254,7 @@ def recent_added(author):
 
 
     elif bool(author) is False:
-        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        conn = connect()
         cur = conn.cursor()
         sql = f""" SELECT * FROM public.book order by book_date_added desc limit 5
                      """
@@ -272,7 +265,7 @@ def recent_added(author):
 
 def mostread_books(genre):
     list=[]
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" SELECT genre FROM public.book 
                  """
@@ -285,7 +278,7 @@ def mostread_books(genre):
 
     if bool(genre) is True:
         if genre in list:
-            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            conn = connect()
             cur = conn.cursor()
             sql = f"""select b.book_id, b.book_name, b.author_name,b.genre, c.count
 from public.book as b
@@ -302,7 +295,7 @@ where genre = '{genre}' order by c.count desc limit 10
 
 
     elif bool(genre) is False:
-        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        conn = connect()
         cur = conn.cursor()
         sql = f""" select b.book_id, b.book_name, b.author_name,b.genre, c.count
 from public.book as b
@@ -317,10 +310,9 @@ order by c.count desc limit 10
 
 def most_favorite(genre):
     list=[]
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
-    sql = f""" SELECT genre FROM public.book 
-                 """
+    sql = f""" SELECT genre FROM public.book   """
     cur.execute(sql)
     genres = cur.fetchall()
     r= len((genres))
@@ -330,7 +322,7 @@ def most_favorite(genre):
 
     if bool(genre) is True:
         if genre in list:
-            conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+            conn = connect()
             cur = conn.cursor()
             sql = f"""select b.book_id, b.book_name, b.author_name,b.genre, c.count
 from public.book as b
@@ -347,7 +339,7 @@ where genre = '{genre}' order by c.count desc limit 10
 
 
     elif bool(genre) is False:
-        conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+        conn = connect()
         cur = conn.cursor()
         sql = f""" select b.book_id, b.book_name, b.author_name,b.genre, c.count
 from public.book as b
@@ -362,7 +354,7 @@ order by c.count desc limit 10
 
 def mostread_genres():
 
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""select b.genre, sum(c.count)
 from public.book as b
@@ -376,7 +368,7 @@ GROUP BY genre order by sum desc limit 5
     return books
 def mostread_authors():
 
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"""select b.author_name, sum(c.count)
 from public.book as b
@@ -390,7 +382,7 @@ GROUP BY author_name order by sum desc limit 5
     return books
 
 def mark_read(book_id,username):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f"INSERT INTO  public.command (mark_read) VALUES ('True') where "
     cur.execute(sql)
@@ -402,7 +394,7 @@ def mark_read(book_id,username):
  #####################################################################################
    ###Rumeysa`s part
 def markread(book_id: int, user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
         INSERT INTO public.command (book_id, user_id, mark_read) VALUES ({book_id}, {user_id}, 'True'); 
@@ -412,7 +404,7 @@ def markread(book_id: int, user_id: int):
     conn.commit()
 
 def markreading(book_id: int, user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
         INSERT INTO public.command (book_id, user_id, mark_reading) VALUES ({book_id}, {user_id}, 'True');
@@ -422,7 +414,7 @@ def markreading(book_id: int, user_id: int):
     conn.commit()
 
 def mark_willread(book_id: int, user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
         INSERT INTO public.command (book_id, user_id, mark_will_read) VALUES ({book_id}, {user_id}, 'True');
@@ -431,7 +423,7 @@ def mark_willread(book_id: int, user_id: int):
     conn.commit()
 
 def fav_books(book_id: int, user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql = f""" 
         INSERT INTO public.command (book_id, user_id, fav_book) VALUES ({book_id}, {user_id}, 'True');
@@ -448,7 +440,7 @@ def fav_books(book_id: int, user_id: int):
         conn.commit()
 
 def my_book_read(user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql1 = f"""
         SELECT 
@@ -468,7 +460,7 @@ def my_book_read(user_id: int):
     return books
 
 def my_book_reading(user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql1 = f"""
         SELECT 
@@ -488,7 +480,7 @@ def my_book_reading(user_id: int):
     return books
 
 def my_book_will_read(user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql1 = f"""
         SELECT 
@@ -508,7 +500,7 @@ def my_book_will_read(user_id: int):
     return books
 
 def my_fav_book(user_id: int):
-    conn = psycopg2.connect("dbname=Group2DB user=postgres password=postgres")
+    conn = connect()
     cur = conn.cursor()
     sql1 = f"""
         SELECT 
